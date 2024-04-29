@@ -1,6 +1,5 @@
 package com.xzy.usercenter.service.impl;
 
-import com.xzy.usercenter.model.User;
 import com.xzy.usercenter.service.UserService;
 import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Assertions;
@@ -9,8 +8,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.DigestUtils;
 
 import java.nio.charset.StandardCharsets;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 class UserServiceImplTest {

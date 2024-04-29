@@ -1,11 +1,9 @@
 package com.xzy.usercenter.service;
 
-import com.xzy.usercenter.model.User;
+import com.xzy.usercenter.model.domain.User;
 import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 
