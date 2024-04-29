@@ -2,6 +2,8 @@ package com.xzy.usercenter.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.xzy.usercenter.common.ErrorCode;
+import com.xzy.usercenter.exception.BusinessException;
 import com.xzy.usercenter.model.domain.User;
 import com.xzy.usercenter.service.UserService;
 import com.xzy.usercenter.mapper.UserMapper;
@@ -34,9 +36,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      */
     private static final String SALT = "daxiaDaxia";
 
-    /*    *//**
+    /**
      * 用户登录态值
-     *//*
+     */
+    /*
     private static final String USER_LOGIN_STATE = "userLoginState";*/
 
     /**
@@ -45,27 +48,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * @param userAccount   用户账户
      * @param userPassword  用户密码
      * @param checkPassword 校验密码
+     * @param planetCode 星球编号
      * @return 新用户id
      */
     @Override
-    public long userRegister(String userAccount, String userPassword, String checkPassword) {
+    public long userRegister(String userAccount, String userPassword, String checkPassword, String planetCode) {
         // 1.校验用户的账户、密码、校验密码，是否符合要求
         // 1.1非空
-        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
-            // todo 后续优化一下返回值
-            return -1L;
+        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword, planetCode)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
         }
 
         // 1.2账户长度不小4位
         if (userAccount.length() < 4) {
-            // todo 后续优化一下返回值
-            return -1L;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账号过短");
         }
 
         // 1.3密码和校验密码不小于8位
         if (userPassword.length() < 8 || checkPassword.length() < 8) {
-            // todo 后续优化一下返回值
-            return -1L;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户密码过短");
         }
 
 
@@ -73,24 +74,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         String regex = "^[a-zA-Z0-9]*$";
         boolean res = userAccount.matches(regex);
         if (!res) {
-            // todo 后续优化一下返回值
-            return -1L;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户名不符合规则");
         }
 
         // 1.6密码和校验码相同
         boolean equals = StringUtils.equals(userPassword, checkPassword);
         if (!equals) {
-            // todo 后续优化一下返回值
-            return -1L;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码和校验码不相同");
         }
 
-        // 1.4账户不能重复(查询数据库，放在最后一位校验，避免操作数据库)
+        //星球编号不能重复
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("planetCode",planetCode);
+        Long count = userMapper.selectCount(queryWrapper);
+        if (count > 1){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "星球编号重复");
+        }
+
+
+        // 1.4账户不能重复(查询数据库，放在最后一位校验，避免操作数据库)
+        queryWrapper = new QueryWrapper<>();
         QueryWrapper<User> wrapper = queryWrapper.eq("userAccount", userAccount);
-        Long count = userMapper.selectCount(wrapper);
+        count = userMapper.selectCount(wrapper);
         if (count > 0) {
-            // todo 后续优化一下返回值
-            return -1L;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户重复");
         }
 
         // 2.对密码进行加密(md5加密，密码千万不要直接以明文存储到数据库中)
@@ -103,8 +110,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
         int num = userMapper.insert(user);
         if (num < 1) {
-            // todo 后续优化一下返回值
-            return -1L;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "新增用户失败");
         }
 
         //返回用户id
@@ -123,28 +129,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 1.校验用户账户和密码是否合法
         // 1.1非空
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
-            // todo 后续优化一下返回值
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
         }
 
         // 1.2账户长度不小于4位
         if (userAccount.length() < 4) {
-            // todo 后续优化一下返回值
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账号过短");
         }
 
         // 1.3密码不小于8位
         if (userPassword.length() < 8) {
-            // todo 后续优化一下返回值
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户密码过短");
         }
 
         // 1.4账户不包含特殊字符
         String regex = "^[a-zA-Z0-9]*$";
         boolean res = userAccount.matches(regex);
         if (!res) {
-            // todo 后续优化一下返回值
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户名不符合规则");
         }
 
         // 2.校验密码是否输入正确，要和数据库中的密文密码对比
@@ -152,7 +154,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("userAccount", userAccount);
         queryWrapper.eq("userPassword", verifyPassword);
-        // todo 这里同样也会把逻辑删除的用户查询出来(mybatisplus逻辑删除)
+        // 这里同样也会把逻辑删除的用户查询出来(mybatisplus逻辑删除)
         User user = userMapper.selectOne(queryWrapper);
         if (user == null) {
             // todo 后续优化一下返回值
@@ -185,6 +187,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         safetyuser.setAvatarUrl(originUser.getAvatarUrl());
         safetyuser.setGender(0);
         //safetyuser.setUserPassword(""); 敏感信息不返回
+        safetyuser.setPlanetCode(originUser.getPlanetCode());
         safetyuser.setPhone(originUser.getPhone());
         safetyuser.setEmail(originUser.getEmail());
         safetyuser.setUserRole(originUser.getUserRole());
