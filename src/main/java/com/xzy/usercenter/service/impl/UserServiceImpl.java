@@ -34,7 +34,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     /**
      * 盐值：混淆密码
      */
-    private static final String SALT = "daxiaDaxia";
+    private static final String SALT = "yupi";
 
     /**
      * 用户登录态值
@@ -107,6 +107,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         User user = new User();
         user.setUserAccount(userAccount);
         user.setUserPassword(verifyPassword);
+        user.setPlanetCode(planetCode);
 
         int num = userMapper.insert(user);
         if (num < 1) {
@@ -157,8 +158,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 这里同样也会把逻辑删除的用户查询出来(mybatisplus逻辑删除)
         User user = userMapper.selectOne(queryWrapper);
         if (user == null) {
-            // todo 后续优化一下返回值
-            log.info("user login failed ,userAccount Cannot match userPassword");
+            log.info("用户账户和密码不匹配");
             return null;
         }
 
@@ -180,12 +180,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      */
     @Override
     public User getSafetyUser(User originUser) {
+        if (originUser == null) {
+            return null;
+        }
         User safetyuser = new User();
-        safetyuser.setId(0L);
+        safetyuser.setId(originUser.getId());
         safetyuser.setUsername(originUser.getUsername());
         safetyuser.setUserAccount(originUser.getUserAccount());
         safetyuser.setAvatarUrl(originUser.getAvatarUrl());
-        safetyuser.setGender(0);
+        safetyuser.setGender(originUser.getGender());
         //safetyuser.setUserPassword(""); 敏感信息不返回
         safetyuser.setPlanetCode(originUser.getPlanetCode());
         safetyuser.setPhone(originUser.getPhone());
@@ -221,7 +224,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         User user = (User) userObj;
 
         if (user == null) {
-            // todo 后续优化一下返回值
             return null;
         }
 

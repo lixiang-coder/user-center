@@ -13,7 +13,6 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -65,8 +64,8 @@ public class userController {
     /**
      * 用户登录
      *
-     * @param userLoginRequest
-     * @param request
+     * @param userLoginRequest 用户登录请求体
+     * @param request 请求参数
      * @return
      */
     @PostMapping("/login")
@@ -102,16 +101,23 @@ public class userController {
         return ResultUtils.success(res);
     }
 
+    /**
+     * 查询当前用户
+     *
+     * @param request
+     * @return
+     */
     @GetMapping("/current")
     public BaseResponse<User> getCurrentUser(HttpServletRequest request) {
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
         User currentUser = (User) userObj;
 
-        if (currentUser == null){
+        if (currentUser == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
         Long userId = currentUser.getId();
 
+        // TODO 校验用户是否合法
         User user = userService.getById(userId);
         User safetyUser = userService.getSafetyUser(user);
         return ResultUtils.success(safetyUser);
@@ -162,6 +168,7 @@ public class userController {
             return null;
         }
 
+        //将isDelete从0置为1，而不是真的删除
         boolean res = userService.removeById(id);
         return ResultUtils.success(res);
 
