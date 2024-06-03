@@ -2,11 +2,14 @@ package com.xzy.usercenter.service;
 
 import com.xzy.usercenter.model.domain.User;
 import jakarta.annotation.Resource;
+import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
+import java.util.Arrays;
+import java.util.List;
 
+@SpringBootTest
 class UserServiceTest {
     @Resource
     private UserService userService;
@@ -28,5 +31,12 @@ class UserServiceTest {
         System.out.println(res);
 
 
+    }
+
+    @Test
+    public void testSearchUserByTags() {
+        List<String> tagNameList = Arrays.asList("java", "python");
+        List<User> userList = userService.searchUserByTags(tagNameList);
+        Assert.assertNotNull(userList);
     }
 }

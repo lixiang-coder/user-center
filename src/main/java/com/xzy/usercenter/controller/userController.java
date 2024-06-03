@@ -9,6 +9,7 @@ import com.xzy.usercenter.model.domain.User;
 import com.xzy.usercenter.model.domain.request.UserLoginRequest;
 import com.xzy.usercenter.model.domain.request.UserRegisterRequest;
 import com.xzy.usercenter.service.UserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ import static com.xzy.usercenter.contant.UserConstant.USER_LOGIN_STATE;
  *
  * @author xzy
  */
+@Tag(name = "用户接口")
 @Slf4j
 @RestController
 @RequestMapping("/user")

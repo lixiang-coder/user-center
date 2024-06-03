@@ -4,6 +4,8 @@ import com.xzy.usercenter.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.util.List;
+
 /**
  * 用户服务类
  *
@@ -51,4 +53,11 @@ public interface UserService extends IService<User> {
      * @return
      */
     User getCurrentUser(HttpServletRequest request);
+
+    /**
+     * 根据标签列表搜索用户
+     * @param tagNameList
+     * @return
+     */
+    List<User> searchUserByTags(List<String> tagNameList);
 }
