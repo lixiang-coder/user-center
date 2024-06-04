@@ -1,6 +1,7 @@
 package com.xzy.usercenter.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xzy.usercenter.common.BaseResponse;
 import com.xzy.usercenter.common.ErrorCode;
 import com.xzy.usercenter.common.ResultUtils;
@@ -14,10 +15,12 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.xzy.usercenter.contant.UserConstant.ADMIN_ROLE;
 import static com.xzy.usercenter.contant.UserConstant.USER_LOGIN_STATE;
@@ -67,7 +70,7 @@ public class userController {
      * 用户登录
      *
      * @param userLoginRequest 用户登录请求体
-     * @param request 请求参数
+     * @param request          请求参数
      * @return
      */
     @PostMapping("/login")
@@ -135,7 +138,7 @@ public class userController {
     @GetMapping("/search")
     public BaseResponse<List<User>> searchUsers(String username, HttpServletRequest request) {
         // 判断是管理员才可以查询
-        if (!isAdmin(request)) {
+        if (!userService.isAdmin(request)) {
             throw new BusinessException(ErrorCode.NO_AUTH, "缺少管理员权限");
         }
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
@@ -153,6 +156,14 @@ public class userController {
     }
 
 
+    @GetMapping("/recommend")
+    public BaseResponse<Page<User>> recommendUsers(long pageSize, long pageNum) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        // 分页查询用户
+        Page<User> userList = userService.page(new Page<>(pageNum, pageSize), queryWrapper);
+        return ResultUtils.success(userList);
+    }
+
     /**
      * 删除用户
      *
@@ -163,7 +174,7 @@ public class userController {
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteUser(@RequestBody long id, HttpServletRequest request) {
         //判断是管理员才可以删除
-        if (!isAdmin(request)) {
+        if (!userService.isAdmin(request)) {
             throw new BusinessException(ErrorCode.NO_AUTH, "缺少管理员权限");
         }
         if (id <= 0) {
@@ -176,17 +187,37 @@ public class userController {
 
     }
 
+
     /**
-     * 判断是否是管理员
+     * 根据标签列表名查询用户
      *
-     * @param request
-     * @return
+     * @param tagNameList 标签列表名
+     * @return 用户集
      */
-    private boolean isAdmin(HttpServletRequest request) {
-        // 判断是管理员才可以查询
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User user = (User) userObj;
-        return user != null && user.getUserRole() == ADMIN_ROLE;
+    @GetMapping("/search/tags")
+    public BaseResponse<List<User>> searchUsersByTags(@RequestParam(required = false) List<String> tagNameList) {
+        // 判断标签列表是否为空
+        if (CollectionUtils.isEmpty(tagNameList)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        List<User> userList = userService.searchUserByTags(tagNameList);
+        return ResultUtils.success(userList);
     }
 
+    /**
+     * 修改用户信息
+     *
+     * @param user
+     * @return
+     */
+    @PostMapping("/update")
+    public BaseResponse<Integer> updateUser(@RequestBody User user, HttpServletRequest request) {
+        // 校验参数是否为空
+        if (user == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        Integer result = userService.updateUser(user, loginUser);
+        return ResultUtils.success(result);
+    }
 }

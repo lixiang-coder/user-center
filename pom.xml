@@ -72,6 +72,21 @@
             </exclusions>
         </dependency>-->
 
+        <!-- https://mvnrepository.com/artifact/org.springframework.session/spring-session-data-redis -->
+        <dependency>
+            <groupId>org.springframework.session</groupId>
+            <artifactId>spring-session-data-redis</artifactId>
+            <version>3.2.2</version>
+        </dependency>
+
+
+        <!--Redis-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+            <version>3.2.4</version>
+        </dependency>
+
         <!-- https://mvnrepository.com/artifact/com.alibaba/easyexcel -->
         <dependency>
             <groupId>com.alibaba</groupId>

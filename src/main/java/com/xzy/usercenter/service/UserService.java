@@ -6,6 +6,9 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
 
+import static com.xzy.usercenter.contant.UserConstant.ADMIN_ROLE;
+import static com.xzy.usercenter.contant.UserConstant.USER_LOGIN_STATE;
+
 /**
  * 用户服务类
  *
@@ -60,4 +63,33 @@ public interface UserService extends IService<User> {
      * @return
      */
     List<User> searchUserByTags(List<String> tagNameList);
+
+    /**
+     * 获取登录用户的信息
+     * @param request
+     * @return
+     */
+    User getLoginUser(HttpServletRequest request);
+
+    /**
+     * 修改用户信息
+     * @param user
+     * @return
+     */
+    Integer updateUser(User user,User loginUser);
+
+    /**
+     * 判断是否是管理员
+     *
+     * @param request
+     * @return
+     */
+    boolean isAdmin(HttpServletRequest request);
+
+    /**
+     * 判断是否是管理员
+     * @param LoginUser
+     * @return
+     */
+    boolean isAdmin(User LoginUser);
 }

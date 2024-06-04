@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.xzy.usercenter.contant.UserConstant.ADMIN_ROLE;
 import static com.xzy.usercenter.contant.UserConstant.USER_LOGIN_STATE;
 
 /**
@@ -279,6 +280,77 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
         return userList2;
     }
+
+    /**
+     * 修改用户信息
+     *
+     * @param user      要修改的信息
+     * @param loginUser 登录的用户
+     * @return
+     */
+    @Override
+    public Integer updateUser(User user, User loginUser) {
+        long userId = user.getId();
+
+        if (userId <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        // todo 如果用户没有传入任何要更新的值，就直接返回报错，不用执行uodate语句
+        // 1.如果是管理员，允许更新任意用户
+        // 2.不是管理员，则只能更新自己的信息
+        if (!isAdmin(loginUser) && userId != loginUser.getId()) {
+            throw new BusinessException(ErrorCode.NO_AUTH);
+        }
+        User oldUser = userMapper.selectById(userId);
+        if (oldUser == null) {
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
+        return userMapper.updateById(user);
+    }
+
+
+    /**
+     * 判断是否是管理员
+     *
+     * @param request
+     * @return
+     */
+    @Override
+    public boolean isAdmin(HttpServletRequest request) {
+        // 判断是管理员才可以查询
+        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        User user = (User) userObj;
+        return user != null && user.getUserRole() == ADMIN_ROLE;
+    }
+
+    /**
+     * 判断是否是管理员
+     *
+     * @param LoginUser
+     * @return
+     */
+    @Override
+    public boolean isAdmin(User LoginUser) {
+        return LoginUser != null && LoginUser.getUserRole() == ADMIN_ROLE;
+    }
+
+    /**
+     * 获取登录用户的信息
+     *
+     * @param request
+     * @return
+     */
+    public User getLoginUser(HttpServletRequest request) {
+        if (request == null) {
+            return null;
+        }
+        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        if (userObj == null) {
+            throw new BusinessException(ErrorCode.NO_AUTH);
+        }
+        return (User) userObj;
+    }
+
 
     /**
      * 根据内存查询
