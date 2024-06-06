@@ -7,26 +7,19 @@ import com.xzy.usercenter.common.ErrorCode;
 import com.xzy.usercenter.common.ResultUtils;
 import com.xzy.usercenter.exception.BusinessException;
 import com.xzy.usercenter.model.domain.User;
-import com.xzy.usercenter.model.domain.request.UserLoginRequest;
-import com.xzy.usercenter.model.domain.request.UserRegisterRequest;
 import com.xzy.usercenter.service.UserService;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import com.xzy.usercenter.model.request.*;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.data.redis.core.convert.RedisTypeMapper;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import static com.xzy.usercenter.contant.UserConstant.ADMIN_ROLE;
 import static com.xzy.usercenter.contant.UserConstant.USER_LOGIN_STATE;
 
 
