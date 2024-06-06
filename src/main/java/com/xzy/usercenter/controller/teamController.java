@@ -6,14 +6,17 @@ import com.xzy.usercenter.common.ErrorCode;
 import com.xzy.usercenter.common.ResultUtils;
 import com.xzy.usercenter.exception.BusinessException;
 import com.xzy.usercenter.model.domain.Team;
+import com.xzy.usercenter.model.domain.User;
 import com.xzy.usercenter.model.dto.TeamQuery;
 import com.xzy.usercenter.service.TeamService;
 import com.xzy.usercenter.service.UserService;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xzy.usercenter.model.request.*;
 
 import java.util.List;
 
@@ -39,20 +42,25 @@ public class teamController {
     /**
      * 新增队伍
      *
-     * @param team
+     * @param teamAddRequest
      * @return
      */
     @PostMapping("/add")
-    public BaseResponse<Long> addTeam(@RequestBody Team team) {
-        if (team == null) {
+    public BaseResponse<Long> addTeam(@RequestBody TeamAddRequest teamAddRequest, HttpServletRequest request) {
+        if (teamAddRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
+        // 获取当前登录的用户
+        User loginUser = userService.getLoginUser(request);
+        Team team = new Team();
+        BeanUtils.copyProperties(teamAddRequest, team);
         // 将队伍插入到数据库中
-        boolean save = teamService.save(team);
+        long teamID = teamService.addTeam(team, loginUser);
+        /*boolean save = teamService.save(team);
         if (!save) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "新增队伍失败");
-        }
-        return ResultUtils.success(team.getId());
+        }*/
+        return ResultUtils.success(teamID);
     }
 
     /**
