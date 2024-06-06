@@ -15,11 +15,15 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.convert.RedisTypeMapper;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.xzy.usercenter.contant.UserConstant.ADMIN_ROLE;
@@ -31,14 +35,17 @@ import static com.xzy.usercenter.contant.UserConstant.USER_LOGIN_STATE;
  *
  * @author xzy
  */
-@Tag(name = "用户接口")
 @Slf4j
 @RestController
+@CrossOrigin(origins = {"http://localhost:3000"})
 @RequestMapping("/user")
 public class userController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 用户注册
@@ -157,11 +164,29 @@ public class userController {
 
 
     @GetMapping("/recommend")
-    public BaseResponse<Page<User>> recommendUsers(long pageSize, long pageNum) {
+    public BaseResponse<Page<User>> recommendUsers(long pageSize, long pageNum, HttpServletRequest request) {
+        // 1.获取登录用户的信息
+        User loginUser = userService.getLoginUser(request);
+        // 2.获取每个用户id作为redis的key
+        String redisKey = String.format("yupao:user:recommend:%s", loginUser.getId());
+        // 3.创建redis
+        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
+        // 4.先查缓存，如果有，直接读缓存并返回
+        Page<User> userPage = (Page<User>) valueOperations.get(redisKey);
+
+        // 4.1缓存中存在，直接返回
+        if (userPage != null) {
+            return ResultUtils.success(userPage);
+        }
+
+        // 4.2缓存中不存在，查数据库
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         // 分页查询用户
-        Page<User> userList = userService.page(new Page<>(pageNum, pageSize), queryWrapper);
-        return ResultUtils.success(userList);
+        userPage = userService.page(new Page<>(pageNum, pageSize), queryWrapper);
+        // 4.3将从数据库中查出的数据存入缓存中，同时设置过期时间（30s）
+        valueOperations.set(redisKey,userPage,30000, TimeUnit.MILLISECONDS);
+        // 5.返回数据
+        return ResultUtils.success(userPage);
     }
 
     /**

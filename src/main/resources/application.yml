@@ -12,12 +12,13 @@ spring:
   # 设置session失效时间(分钟)
   session:
     timeout: 86400
+#    store-type: redis  # 将session存储到redis中
   # 配置redis
   data:
     redis:
       port: 6379
       host: localhost
-      database: 0
+      database: 2
       password: 123456
 
 #  mvc:
